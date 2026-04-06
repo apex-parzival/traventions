@@ -1,6 +1,6 @@
-const AMADEUS_PROXY_V1 = '/amadeus-api/v1';
-const AMADEUS_PROXY_V2 = '/amadeus-api/v2';
-const AMADEUS_PROXY_V3 = '/amadeus-api/v3';
+const AMADEUS_PROXY_V1 = '/api/amadeus/v1';
+const AMADEUS_PROXY_V2 = '/api/amadeus/v2';
+const AMADEUS_PROXY_V3 = '/api/amadeus/v3';
 
 let accessToken: string | null = null;
 
