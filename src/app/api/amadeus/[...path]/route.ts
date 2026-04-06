@@ -1,13 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export const maxDuration = 30; // Vercel function timeout in seconds
+export const maxDuration = 30;
 
 const AMADEUS_BASE = 'https://test.api.amadeus.com';
-
-function buildTargetUrl(params: { path: string[] }, search: string): string {
-  const path = params.path.join('/');
-  return `${AMADEUS_BASE}/${path}${search}`;
-}
 
 function corsHeaders() {
   return {
@@ -23,9 +18,10 @@ export async function OPTIONS() {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
-  const targetUrl = buildTargetUrl(params, request.nextUrl.search);
+  const { path } = await params;
+  const targetUrl = `${AMADEUS_BASE}/${path.join('/')}${request.nextUrl.search}`;
 
   try {
     const response = await fetch(targetUrl, {
@@ -37,21 +33,14 @@ export async function GET(
 
     const text = await response.text();
     let data: unknown;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      data = { raw: text };
-    }
+    try { data = JSON.parse(text); } catch { data = { raw: text }; }
 
-    return NextResponse.json(data, {
-      status: response.status,
-      headers: corsHeaders(),
-    });
+    return NextResponse.json(data, { status: response.status, headers: corsHeaders() });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error('[amadeus-proxy] GET failed:', targetUrl, msg);
     return NextResponse.json(
-      { error: 'Proxy GET request failed', detail: msg },
+      { error: 'Proxy GET failed', detail: msg },
       { status: 502, headers: corsHeaders() }
     );
   }
@@ -59,18 +48,14 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
-  const targetUrl = buildTargetUrl(params, request.nextUrl.search);
+  const { path } = await params;
+  const targetUrl = `${AMADEUS_BASE}/${path.join('/')}${request.nextUrl.search}`;
   const contentType = request.headers.get('Content-Type') || 'application/json';
 
-  // Always read body as raw text to avoid double-consumption issues
   let rawBody: string;
-  try {
-    rawBody = await request.text();
-  } catch {
-    rawBody = '';
-  }
+  try { rawBody = await request.text(); } catch { rawBody = ''; }
 
   try {
     const response = await fetch(targetUrl, {
@@ -84,21 +69,14 @@ export async function POST(
 
     const text = await response.text();
     let data: unknown;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      data = { raw: text };
-    }
+    try { data = JSON.parse(text); } catch { data = { raw: text }; }
 
-    return NextResponse.json(data, {
-      status: response.status,
-      headers: corsHeaders(),
-    });
+    return NextResponse.json(data, { status: response.status, headers: corsHeaders() });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error('[amadeus-proxy] POST failed:', targetUrl, msg);
     return NextResponse.json(
-      { error: 'Proxy POST request failed', detail: msg },
+      { error: 'Proxy POST failed', detail: msg },
       { status: 502, headers: corsHeaders() }
     );
   }
