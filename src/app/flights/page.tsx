@@ -64,15 +64,18 @@ const CABIN_CLASSES = [
 ];
 
 const SidebarItem = ({ icon: Icon, label, active = false, badge = null, onClick }: any) => (
-  <div className={cn(
-    "flex items-center gap-3 px-5 py-3 text-[0.82rem] font-medium transition-all border-l-4 cursor-pointer group",
-    active 
-      ? "bg-teal-500/10 text-teal-400 border-teal-500" 
-      : "text-slate-400 border-transparent hover:bg-white/5 hover:text-white"
-  )} onClick={onClick}>
-    <Icon size={18} className={cn(active ? "text-teal-400" : "text-slate-500 group-hover:text-slate-300")} />
+  <div
+    className={cn(
+      "flex items-center gap-3 mx-3 px-3 py-2.5 text-[0.82rem] font-semibold rounded-lg transition-all cursor-pointer group",
+      active
+        ? "bg-[#1e2d4f] text-white shadow-sm"
+        : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+    )}
+    onClick={onClick}
+  >
+    <Icon size={17} className={cn(active ? "text-white" : "text-slate-400 group-hover:text-slate-600")} />
     <span>{label}</span>
-    {badge && <span className="ml-auto bg-teal-500 text-white text-[0.6rem] px-1.5 py-0.5 rounded-full font-bold">{badge}</span>}
+    {badge && <span className="ml-auto bg-teal-500 text-white text-[0.55rem] px-1.5 py-0.5 rounded-full font-bold tracking-wide">{badge}</span>}
   </div>
 );
 
@@ -255,53 +258,68 @@ export default function FlightsPage() {
   }
 
   return (
-    <div className="h-screen w-screen overflow-hidden flex bg-slate-50">
-      {/* Primary Sidebar (Navigation) */}
+    <div className="h-screen w-screen overflow-hidden flex bg-white">
+      {/* Primary Sidebar — Light Theme */}
       <aside className={cn(
-        "w-[260px] bg-[#1e2d4f] flex flex-col flex-shrink-0 transition-all duration-300 border-r border-slate-800/50",
-        !sidebarOpen && "w-0 -translate-x-full overflow-hidden"
+        "w-[220px] bg-white flex flex-col flex-shrink-0 transition-all duration-300 border-r border-slate-100",
+        !sidebarOpen && "w-0 overflow-hidden"
       )}>
-        <div className="px-6 py-8 cursor-pointer" onClick={() => router.push("/")}>
-          <div className="flex items-center gap-3">
-             <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-[#1e2d4f] font-black text-lg shadow-lg">T</div>
-             <div className="font-bold text-white tracking-tight text-lg">TRAVENTIONS</div>
-          </div>
-        </div>
-        
-        <div className="flex-1 overflow-y-auto no-scrollbar">
-          <div className="px-5 mb-6">
-            <div className="bg-teal-600/90 text-white text-[0.6rem] font-black px-3 py-1.5 rounded-lg border border-teal-500/20 inline-block uppercase tracking-widest shadow-lg shadow-teal-900/20">TMC EDITION</div>
-          </div>
-          
-          <div className="space-y-1">
-            <div className="text-[0.6rem] font-black text-slate-500 uppercase px-6 mb-2 tracking-[0.2em]">Core Modules</div>
-            <SidebarItem icon={Plane} label="Flight Booking" active />
-            <SidebarItem icon={LayoutGrid} label="Hotel Inventory" />
-            <SidebarItem icon={Briefcase} label="Car Rentals" />
-            <SidebarItem icon={History} label="Tours & Transfers" />
-
-            <div className="h-px bg-slate-800/50 my-6 mx-5" />
-            
-            <div className="text-[0.6rem] font-black text-slate-500 uppercase px-6 mb-2 tracking-[0.2em]">Business</div>
-            <SidebarItem icon={TrendingUp} label="Intelligence" badge="AI" />
-            <SidebarItem icon={CreditCard} label="Billing & Invoicing" />
-            <SidebarItem icon={Users} label="Traveller Profiles" />
-
-            <div className="h-px bg-slate-800/50 my-6 mx-5" />
-            
-            <SidebarItem icon={Settings} label="Settings" />
-            <SidebarItem icon={HelpCircle} label="Support" />
-          </div>
-        </div>
-
-        <div className="p-4 border-t border-slate-800/50 bg-black/10">
-          <div className="flex items-center gap-3 p-3 rounded-2xl hover:bg-white/5 transition-all cursor-pointer group">
-            <div className="w-9 h-9 rounded-xl bg-teal-600 flex items-center justify-center font-bold text-white shadow-lg shadow-teal-900/20">JD</div>
-            <div className="flex-1 overflow-hidden">
-               <div className="text-[0.8rem] font-bold text-white truncate leading-tight">John Doe</div>
-               <div className="text-[0.65rem] text-slate-500 font-medium group-hover:text-teal-400 transition-colors">traveler.consultant@traventions.com</div>
+        {/* Logo */}
+        <div className="px-5 pt-6 pb-4 cursor-pointer" onClick={() => router.push("/")}>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-[#1e2d4f] rounded-lg flex items-center justify-center text-white font-black text-base shadow">
+              <Plane size={16} className="-rotate-45" />
             </div>
-            <LogOut size={16} className="text-slate-500 group-hover:text-red-400 transition-colors" />
+            <div className="font-black text-[#1e2d4f] tracking-tight text-[1rem] uppercase">Traventions</div>
+          </div>
+        </div>
+
+        {/* Agency Badge */}
+        <div className="px-4 pb-4">
+          <div className="bg-teal-600 text-white text-[0.6rem] font-black px-3 py-1.5 rounded-md tracking-widest uppercase">TMC Booking Agent</div>
+          <div className="text-[0.65rem] text-slate-400 font-medium mt-1 px-1">ABC Travel Solutions</div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto no-scrollbar py-2">
+          {/* Section: Book Travel */}
+          <div className="mb-1">
+            <div className="text-[0.6rem] font-black text-slate-400 uppercase px-6 mb-2 tracking-[0.18em]">Book Travel</div>
+            <SidebarItem icon={LayoutGrid} label="Dashboard" />
+            <SidebarItem icon={Plane} label="Search Flights" active />
+            <SidebarItem icon={LayoutGrid} label="Search Hotels" />
+            <SidebarItem icon={Briefcase} label="Search Cabs / Transfers" />
+          </div>
+
+          <div className="h-px bg-slate-100 my-3 mx-4" />
+
+          {/* Section: My Bookings */}
+          <div className="mb-1">
+            <div className="text-[0.6rem] font-black text-slate-400 uppercase px-6 mb-2 tracking-[0.18em]">My Bookings</div>
+            <SidebarItem icon={History} label="All Bookings" />
+            <SidebarItem icon={Calendar} label="Upcoming Trips" />
+          </div>
+
+          <div className="h-px bg-slate-100 my-3 mx-4" />
+
+          {/* Intelligence */}
+          <SidebarItem icon={TrendingUp} label="Intelligence" badge="AI" />
+        </div>
+
+        {/* Bottom: User Profile */}
+        <div className="border-t border-slate-100 p-3">
+          <div className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-slate-50 transition-all cursor-pointer group">
+            <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center font-bold text-teal-700 text-xs border-2 border-white shadow-sm overflow-hidden">
+              <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=John" alt="SA" className="w-full h-full" />
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <div className="text-[0.75rem] font-bold text-slate-800 truncate leading-tight">John Doe</div>
+              <div className="text-[0.6rem] text-slate-400 font-medium">TMC Booking Agent</div>
+            </div>
+            <LogOut size={14} className="text-slate-300 group-hover:text-red-400 transition-colors shrink-0" />
+          </div>
+          <div className="mt-2">
+            <SidebarItem icon={Users} label="My Profile" />
+            <SidebarItem icon={Settings} label="Settings" />
           </div>
         </div>
       </aside>
