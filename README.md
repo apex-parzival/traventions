@@ -9,14 +9,18 @@ Tranventions is a premium, high-performance flight booking and travel management
 - **Round-Trip & One-Way**: Optimized workflows for standard travel patterns.
 - **Real-time GDS Inventory**: Direct integration with over 400+ global airlines.
 - **Fare Type Management**: Handle **Net**, **NDC**, **Corporate**, and **Commissionable** fares in a single unified view.
+- **Multi-currency Support**: Instant currency switching (USD, EUR, GBP, AED, INR) with client-side conversion. [NEW]
+- **Environmental Impact (Eco-Priority)**: Heuristic-based sustainable travel indicators for fuel-efficient aircraft. [NEW]
 
 ### 🎨 Premium UI/UX
 - **Glassmorphism Design**: A sleek, modern aesthetic with high-density information display.
 - **Dynamic Animations**: Powered by **Framer Motion** for a liquid-smooth experience.
+- **Modular Component Architecture**: Decoupled UI components for high scalability and maintainability. [NEW]
 - **Responsive Layout**: Fully functional across desktop, tablet, and mobile devices.
 - **Aesthetic Iconography**: Consistent branding using **Lucide React**.
 
 ### 💼 Professional Tools
+- **Zustand Centralized State**: Robust state management for complex multi-step booking flows. [NEW]
 - **Interactive Seat Mapping**: Detailed aircraft layouts for precise seat selection.
 - **Flexible Date Search**: 15-day price matrix visualization to find the most profitable/optimal travel dates.
 - **Smart Ancillaries**: Integrated baggage, meal selection, and hold-for-payment workflows.
