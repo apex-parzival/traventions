@@ -14,7 +14,7 @@ import {
   ArrowRight,
   TrendingUp,
 } from "lucide-react";
-import { getFlightDatesTrend, searchFlexibleDates } from "@/services/amadeus";
+import { getFlightDatesTrend, searchFlexibleDates } from "@/services/duffel";
 import { cn } from "@/lib/utils";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

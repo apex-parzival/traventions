@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Compass, Sparkles, Map, TrendingUp, Search, Calendar, DollarSign, ArrowRight, Loader2 } from "lucide-react";
-import { getFlightInspiration, getFlightCheapestDates } from "@/services/amadeus";
+import { getFlightInspiration, getFlightCheapestDates } from "@/services/duffel";
 import LocationSearch from "@/components/LocationSearch";
 import { cn } from "@/lib/utils";
 

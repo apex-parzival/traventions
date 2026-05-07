@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Loader2, AlertCircle, CheckCircle2, Info } from "lucide-react";
-import { priceFlightOffer, getSeatMap } from "@/services/amadeus";
+import { priceFlightOffer, getSeatMap } from "@/services/duffel";
 import { cn } from "@/lib/utils";
 
 interface SeatMapProps {

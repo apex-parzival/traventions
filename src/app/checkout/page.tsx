@@ -17,7 +17,7 @@ import {
   ChevronRight,
   Lock,
 } from "lucide-react";
-import { createFlightOrder, createHotelBooking } from "@/services/amadeus";
+import { createFlightOrder, createHotelBooking } from "@/services/duffel";
 import { cn } from "@/lib/utils";
 
 function CheckoutContent() {

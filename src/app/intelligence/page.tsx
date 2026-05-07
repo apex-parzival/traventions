@@ -9,7 +9,7 @@ import {
   getTripPurposePrediction,
   getNearestAirports,
   getAirTrafficData,
-} from "@/services/amadeus";
+} from "@/services/duffel";
 import LocationSearch from "@/components/LocationSearch";
 import { cn } from "@/lib/utils";
 

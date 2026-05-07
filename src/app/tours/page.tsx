@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Compass, MapPin, Search, Star, Clock, DollarSign, Loader2, ArrowRight } from "lucide-react";
-import { getToursAndActivities, searchLocations } from "@/services/amadeus";
+import { getToursAndActivities, searchLocations } from "@/services/duffel";
 import { cn } from "@/lib/utils";
 
 export default function ToursPage() {

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Settings, Search, Info, ExternalLink, Plane, MapPin, Globe, Loader2, Link as LinkIcon } from "lucide-react";
-import { getAirlineCodeLookup } from "@/services/amadeus";
+import { getAirlineCodeLookup } from "@/services/duffel";
 import { cn } from "@/lib/utils";
 
 const checkInLinks = [

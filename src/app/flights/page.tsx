@@ -52,7 +52,7 @@ import {
 import LocationSearch from "@/components/LocationSearch";
 import SeatMap from "@/components/SeatMap";
 import FlexibleDateSearch from "@/components/FlexibleDateSearch";
-import { searchFlightsAdvanced, getFlightChoicePrediction } from "@/services/amadeus";
+import { searchFlights } from "@/services/duffel";
 import { cn } from "@/lib/utils";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -111,7 +111,7 @@ export default function FlightsPage() {
   const [selectedStops, setSelectedStops] = useState<string[]>([]);
   const [selectedAirlines, setSelectedAirlines] = useState<string[]>([]);
   const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
-  const [selectedFareOptions, setSelectedFareOptions] = useState<string[]>(["net", "ndc", "consolidator", "corporate"]);
+  const [selectedFareOptions, setSelectedFareOptions] = useState<string[]>(["net", "ndc", "commissionable", "corporate"]);
   const [dictionaries, setDictionaries] = useState<any>({});
   const [sortBy, setSortBy] = useState<"best" | "cheapest">("best");
 
@@ -125,15 +125,26 @@ export default function FlightsPage() {
     if (saved) setRecentSearches(JSON.parse(saved));
   }, []);
 
+  // Extract clean IATA code from whatever string the location inputs gave us
+  const resolveIata = (raw: string): string => {
+    if (!raw) return "";
+    const parenMatch = raw.match(/\(([A-Z]{3})\)/i);
+    if (parenMatch) return parenMatch[1].toUpperCase();
+    const upper = raw.trim().toUpperCase().replace(/[^A-Z]/g, "");
+    return upper.substring(0, 3);
+  };
+
   const handleSearch = async (flexParams: any = null) => {
     setIsSearching(true);
     setError(null);
     try {
       const validLegs = legs.filter(l => l.origin && l.destination && l.date);
+      const rawOrigin = resolveIata(origin);
+      const rawDest = resolveIata(destination);
       const searchParams = flexParams || {
         type: activeTab,
-        origin: origin.toUpperCase(),
-        destination: destination.toUpperCase(),
+        origin: rawOrigin,
+        destination: rawDest,
         departureDate,
         returnDate: activeTab === "roundTrip" ? returnDate : undefined,
         adults: pax.adults,
@@ -143,8 +154,13 @@ export default function FlightsPage() {
         legs: activeTab === "multiCity" ? validLegs : undefined,
       };
 
+      console.log('[search] params:', searchParams);
+
+      if (activeTab !== "multiCity" && !searchParams.origin) throw new Error("Please enter a departure city or airport.");
+      if (activeTab !== "multiCity" && !searchParams.destination) throw new Error("Please enter a destination city or airport.");
+      if (activeTab !== "multiCity" && !searchParams.departureDate) throw new Error("Please select a departure date.");
       if (activeTab === "multiCity" && (!validLegs || validLegs.length === 0)) {
-         throw new Error("Please fill out at least one valid flight leg for multi-city search.");
+        throw new Error("Please fill out at least one valid flight leg for multi-city search.");
       }
 
       // Auto-fill form if coming from Flexible Date Search
@@ -167,21 +183,47 @@ export default function FlightsPage() {
         localStorage.setItem("recentSearches", JSON.stringify(updated));
       }
 
-      const response = await searchFlightsAdvanced(searchParams);
-      const data = response.data.map((flight: any, i: number) => {
-        const types = ['net', 'ndc', 'commissionable', 'corporate'];
-        return { ...flight, fareType: types[i % types.length] };
-      });
-      setResults(data);
-      setDictionaries(response.dictionaries || {});
+      const response = await searchFlights(searchParams);
+      console.log('[search] response type:', Array.isArray(response) ? `array[${response.length}]` : typeof response, response?.[0] ? Object.keys(response[0]) : response);
+      const fareTypes = ['net', 'ndc', 'commissionable', 'corporate'];
 
-      if (data && data.length > 0) {
-        setView("results");
-        try {
-          await getFlightChoicePrediction(data.slice(0, 10));
-        } catch (e) { /* silent */ }
+      let adaptedData: any[] = [];
+
+      if (Array.isArray(response) && response.length > 0 && response[0]?.itineraries) {
+        // Mock / Amadeus-style format: array of { id, itineraries, price, ... }
+        adaptedData = response.map((f: any, index: number) => ({
+          ...f,
+          fareType: f.fareType || fareTypes[index % 4],
+        }));
+      } else if (response?.groupedItineraryResponse) {
+        // Sabre BFM grouped format
+        const grp = response.groupedItineraryResponse;
+        adaptedData = (grp.itineraryGroups?.[0]?.itineraries || []).map((itin: any, index: number) => {
+          const leg = grp.legDescs?.find((l: any) => l.id === itin.legs?.[0]?.ref);
+          const segments = (leg?.schedules || []).map((schedRef: any) => {
+            const sched = grp.scheduleDescs?.find((s: any) => s.id === schedRef.ref);
+            return {
+              departure: { iataCode: sched?.departure?.city || searchParams.origin, at: `${searchParams.departureDate}T${sched?.departure?.time || '00:00:00'}` },
+              arrival: { iataCode: sched?.arrival?.city || searchParams.destination, at: `${searchParams.departureDate}T${sched?.arrival?.time || '00:00:00'}` },
+              carrierCode: sched?.carrier?.marketing || 'UN',
+              cabin: searchParams.cabinClass,
+            };
+          });
+          const priceStr = itin.pricingInformation?.[0]?.fare?.totalFare?.amount || "0";
+          return {
+            id: `sabre-${index}`,
+            itineraries: [{ segments, duration: leg?.elapsed ? `PT${Math.floor(leg.elapsed / 60)}H${String(leg.elapsed % 60).padStart(2,'0')}M` : "PT2H30M" }],
+            price: { total: String(priceStr) },
+            fareType: fareTypes[index % 4],
+          };
+        });
       }
+
+      console.log('[search] adaptedData length:', adaptedData.length);
+      setResults(adaptedData);
+      setView("results");
     } catch (err: any) {
+      console.error('[search] error:', err.message);
       setError(err.message || "Something went wrong during search.");
     } finally {
       setIsSearching(false);
@@ -195,6 +237,8 @@ export default function FlightsPage() {
       const price = parseFloat(flight.price.total);
       if (price > maxPrice) return false;
 
+      if (!flight.itineraries?.[0]?.segments) return false;
+
       const stops = flight.itineraries[0].segments.length - 1;
       if (selectedStops.length > 0) {
         const stopLabel = stops === 0 ? "Non-stop" : stops === 1 ? "1 Stop" : "2+ Stops";
@@ -204,8 +248,8 @@ export default function FlightsPage() {
       const carrier = flight.itineraries[0].segments[0].carrierCode;
       if (selectedAirlines.length > 0 && !selectedAirlines.includes(carrier)) return false;
 
-      // Fare Type Filter
-      if (selectedFareOptions.length > 0) {
+      // Fare Type Filter — only filter when flight has a fareType set
+      if (selectedFareOptions.length > 0 && flight.fareType) {
         if (!selectedFareOptions.includes(flight.fareType)) return false;
       }
 
@@ -372,7 +416,7 @@ export default function FlightsPage() {
               </div>
 
               {/* Search Panel */}
-              <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden mb-12">
+              <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 mb-12">
                 <div className="p-8">
                   {/* Trip Types */}
                   <div className="flex items-center justify-between mb-8">
@@ -578,10 +622,10 @@ export default function FlightsPage() {
                   </div>
 
                   <div className="flex items-stretch gap-4">
-                    <button 
-                      className="flex-1 py-5 bg-[#1e2d4f] text-white rounded-2xl font-black text-base flex items-center justify-center gap-3 hover:bg-[#2a3d66] transition-all disabled:opacity-50 shadow-xl shadow-indigo-900/10 active:scale-[0.98]" 
-                      onClick={() => handleSearch()} 
-                      disabled={isSearching || (activeTab === "multiCity" ? legs.some(l => !l.origin || !l.destination || !l.date) : (!origin || !destination || !departureDate))}
+                    <button
+                      className="flex-1 py-5 bg-[#1e2d4f] text-white rounded-2xl font-black text-base flex items-center justify-center gap-3 hover:bg-[#2a3d66] transition-all disabled:opacity-50 shadow-xl shadow-indigo-900/10 active:scale-[0.98]"
+                      onClick={() => handleSearch()}
+                      disabled={isSearching}
                     >
                       {isSearching ? <Loader2 className="animate-spin" size={20} /> : <SearchIcon size={20} />}
                       {isSearching ? "Analysing Inventory..." : "Check Availability"}
@@ -683,7 +727,7 @@ export default function FlightsPage() {
                     <h3 className="text-xl font-black text-slate-800 mb-4 tracking-tight">System Status</h3>
                     <div className="grid grid-cols-2 gap-4">
                        <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
-                          <div className="text-[0.6rem] font-bold text-emerald-600 uppercase mb-1">Amadeus GDS</div>
+                          <div className="text-[0.6rem] font-bold text-emerald-600 uppercase mb-1">Duffel API</div>
                           <div className="text-sm font-black text-slate-800">Operational</div>
                        </div>
                        <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
@@ -1044,6 +1088,33 @@ export default function FlightsPage() {
                               </div>
                            </div>
                         </div>
+
+                     {filteredResults.length === 0 && (
+                       <div className="flex flex-col items-center justify-center py-24 text-center">
+                         <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                           <Plane size={28} className="text-slate-300" />
+                         </div>
+                         <h3 className="text-lg font-black text-slate-700 mb-2">No Flights Found</h3>
+                         <p className="text-sm text-slate-400 max-w-xs mb-6">
+                           {results.length > 0
+                             ? "Your active filters are hiding all results. Try adjusting price range or fare type filters."
+                             : "No flights are available for this route and date. Try a different combination."}
+                         </p>
+                         {results.length > 0 && (
+                           <button
+                             className="px-6 py-2.5 bg-indigo-900 text-white rounded-xl text-xs font-bold hover:bg-indigo-950 transition-all"
+                             onClick={() => {
+                               setMaxPrice(5000);
+                               setSelectedStops([]);
+                               setSelectedAirlines([]);
+                               setSelectedFareOptions(["net", "ndc", "commissionable", "corporate"]);
+                             }}
+                           >
+                             Reset Filters
+                           </button>
+                         )}
+                       </div>
+                     )}
 
                      {filteredResults.map((flight, idx) => (
                         <div key={idx} className="bg-white border border-slate-100 rounded-[2rem] shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden group mb-8">

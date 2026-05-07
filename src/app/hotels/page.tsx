@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Hotel, Search, Calendar, MapPin, Star, Loader2, Info } from "lucide-react";
-import { searchHotels, getHotelRatings } from "@/services/amadeus";
+import { searchHotels, getHotelRatings } from "@/services/duffel";
 import LocationSearch from "@/components/LocationSearch";
 import { cn } from "@/lib/utils";
 

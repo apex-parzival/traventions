@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Car, MapPin, Calendar, Clock, Users, ArrowRight, Loader2, ShieldCheck, Search } from "lucide-react";
-import { getTransferOffers } from "@/services/amadeus";
+import { getTransferOffers } from "@/services/duffel";
 import { cn } from "@/lib/utils";
 
 export default function TransfersPage() {

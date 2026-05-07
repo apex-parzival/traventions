@@ -12,8 +12,8 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: '/amadeus-api/:path*',
-        destination: 'https://test.api.amadeus.com/:path*',
+        source: '/sabre-api/:path*',
+        destination: 'https://api-crt.cert.havail.sabre.com/:path*',
       },
     ];
   },

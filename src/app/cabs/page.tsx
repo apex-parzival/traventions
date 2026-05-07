@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Car, Search, MapPin, Clock, Users, ArrowRight, Loader2, Info } from "lucide-react";
-import { searchTransfers } from "@/services/amadeus";
+import { searchTransfers } from "@/services/duffel";
 import LocationSearch from "@/components/LocationSearch";
 import { cn } from "@/lib/utils";
 
